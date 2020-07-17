@@ -2,7 +2,7 @@
 
 class Message{
   final String text;
-  // final DateTime date;
-  final String sender;  
-  Message({this.text, this.sender});
+  final DateTime date;
+  final bool sender;  
+  Message(this.text, this.sender, this.date);
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/rendering.dart';
 import 'message.dart';
+import 'package:intl/intl.dart';
 
 void main() => runApp(Messanger());
 // void main() => runApp(Chat());
@@ -143,95 +144,6 @@ class AppState extends State<Messanger> {
               flex: 1,
             ),
             Expanded(
-                child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  "Recent",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey[200],
-                              ),
-                            ),
-                          ),
-                          width: 90,
-                          child: Column(
-                            children: <Widget>[
-                              Stack(
-                                children: <Widget>[
-                                  FloatingActionButton(
-                                    onPressed: () {
-                                      // if (photos.length - 1 - index == 3) {
-                                      //   Navigator.push(
-                                      //       context,
-                                      //       MaterialPageRoute(
-                                      //           builder: (context) => Chat()));
-                                      //   print("إيه في إيه!");
-                                      // }
-                                      // print("Pressed $index");
-                                    },
-                                    heroTag: tags[index],
-                                    backgroundColor: Colors.white,
-                                    hoverColor: Colors.green,
-                                    splashColor: Colors.orange,
-                                    child: Container(
-                                      width: 70,
-                                      height: 70,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        // color: Colors.white,
-                                        image: new DecorationImage(
-                                          image: new AssetImage(photos[
-                                              photos.length - 1 - index]),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: status[index],
-                                        border: Border.all(
-                                            color: Colors.white, width: 3),
-                                      ),
-                                    ),
-                                    bottom: 0,
-                                    right: 0,
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 10),
-                                child: Text(
-                                  usernames[usernames.length - 1 - index],
-                                  textAlign: TextAlign.end,
-                                  style: TextStyle(fontSize: 15),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      // separatorBuilder: (context, index) => Divider(),
-                      itemCount: photos.length),
-                ),
-              ],
-            )),
-            Expanded(
               child: Column(
                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +263,6 @@ class AppState extends State<Messanger> {
 
 class Chat extends StatefulWidget {
   final String username;
-
   const Chat({Key key, this.username}) : super(key: key);
 
   @override
@@ -361,15 +272,18 @@ class Chat extends StatefulWidget {
 }
 
 class ChatScreen extends State<Chat> {
-  final String username;
+  var _time = DateTime.parse("2018-08-16T11:00:00.000Z");
+  final String friendUsername;
   final msgText = TextEditingController();
   int messageCount = 0;
   Message _msg;
   List<Message> _messages = new List<Message>();
-  ChatScreen(this.username);
+  ChatScreen(this.friendUsername);
   _messageBuilder(Message message, bool isMe) {
     Container msg = new Container(
         decoration: BoxDecoration(
+            border: Border.all(
+                color: Colors.transparent, width: 5, style: BorderStyle.none),
             shape: BoxShape.rectangle,
             borderRadius: isMe
                 ? BorderRadius.only(
@@ -387,14 +301,55 @@ class ChatScreen extends State<Chat> {
           children: <Widget>[
             Text(
               message.text,
-              style: TextStyle(color: isMe ? Colors.white70 : Colors.black),
+              style: TextStyle(color: isMe ? Colors.white : Colors.black),
             ),
-            Container(
-              alignment: isMe ? Alignment.bottomRight : Alignment.bottomLeft,
-              child: Text(
-                message.sender,
-                style: TextStyle(color: isMe ? Colors.white70 : Colors.black),
-              ),
+            Row(
+              children: isMe
+                  ? <Widget>[
+                      Container(
+                        // alignment:
+                        // isMe ? Alignment.bottomLeft : Alignment.bottomRight,
+                        child: Text(
+                          // message.date.parse("2018-08-16T11:00:00.000Z").toString(),
+                          DateFormat.jm().format(message.date),
+                          style: TextStyle(color: Colors.white70, fontSize: 10),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(padding: EdgeInsets.all(15)),
+                      ),
+                      Container(
+                        // alignment:
+                        // isMe ? Alignment.bottomRight : Alignment.bottomLeft,
+                        child: Text(
+                          "Me",
+                          style: TextStyle(color: Colors.white70, fontSize: 10),
+                        ),
+                      ),
+                    ]
+                  : <Widget>[
+                      Container(
+                        // alignment:
+                        // isMe ? Alignment.bottomRight : Alignment.bottomLeft,
+                        child: Text(
+                          friendUsername,
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 10),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(padding: EdgeInsets.all(15)),
+                      ),
+                      Container(
+                        // alignment:
+                        // isMe ? Alignment.bottomLeft : Alignment.bottomRight,
+                        child: Text(
+                          DateFormat.jm().format(message.date),
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 10),
+                        ),
+                      ),
+                    ],
             ),
           ],
         ));
@@ -428,8 +383,23 @@ class ChatScreen extends State<Chat> {
             onPressed: () {
               setState(() {
                 if (msgText.text.isNotEmpty) {
-                  _messages.add(new Message(text: msgText.text, sender: "me"));
+                  _messages
+                      .add(new Message(msgText.text, true, new DateTime.now()));
                   messageCount++;
+                  if (messageCount % 3 == 0) {
+                    _messages.add(new Message(
+                        "السلام عليكم و رحمة الله و بركااتووووو",
+                        false,
+                        new DateTime.now()));
+                    messageCount++;
+                  }
+                  if (messageCount % 5 == 0) {
+                    _messages.add(new Message(
+                        "إيه في إي!!",
+                        false,
+                        new DateTime.now()));
+                    messageCount++;
+                  }
                   msgText.clear();
                 }
               });
@@ -455,6 +425,12 @@ class ChatScreen extends State<Chat> {
               Navigator.pop(context, false),
             },
           ),
+          title: Text(
+            friendUsername,
+            style: TextStyle(color: Colors.white),
+          ),
+          centerTitle: true,
+          // titleSpacing: MediaQuery.of(context).size.width*0.35,
         ),
         body: Column(
           children: <Widget>[
@@ -465,7 +441,8 @@ class ChatScreen extends State<Chat> {
                 reverse: true,
                 itemCount: this.messageCount,
                 itemBuilder: (context, index) => _messageBuilder(
-                    _messages[_messages.length - index - 1], true),
+                    _messages[_messages.length - index - 1],
+                    _messages[_messages.length - index - 1].sender),
               ),
             )),
             _messageComposser()
