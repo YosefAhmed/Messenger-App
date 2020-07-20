@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/rendering.dart';
+import 'package:messanger/Database/DbHelper.dart';
+import 'package:messanger/model/MessageModel.dart';
 import 'message.dart';
 import 'package:intl/intl.dart';
 
@@ -47,6 +49,14 @@ class AppState extends State<Messanger> {
   var myKey = GlobalKey<ScaffoldState>();
   bool flag = true;
   bool _color = true;
+
+  DbHelper _helper;
+  @override
+  void initState() {
+    super.initState();
+    _helper = DbHelper();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -279,6 +289,15 @@ class ChatScreen extends State<Chat> {
   Message _msg;
   List<Message> _messages = new List<Message>();
   ChatScreen(this.friendUsername);
+
+  DbHelper _helper;
+
+  @override
+  void initState() {
+    super.initState();
+    _helper = DbHelper();
+  }
+
   _messageBuilder(Message message, bool isMe) {
     Container msg = new Container(
         decoration: BoxDecoration(
@@ -380,7 +399,16 @@ class ChatScreen extends State<Chat> {
           IconButton(
             color: Colors.blueAccent,
             icon: Icon(Icons.send),
-            onPressed: () {
+            onPressed: () async {
+              //Data Base
+              MessageModel msgModel = MessageModel({
+                'text': msgText.text,
+                'date': DateTime.now().toString(),
+                'sender': 0
+              });
+
+              int id = await _helper.createChat(msgModel);
+              print("Done $id");
               setState(() {
                 if (msgText.text.isNotEmpty) {
                   _messages
@@ -394,10 +422,8 @@ class ChatScreen extends State<Chat> {
                     messageCount++;
                   }
                   if (messageCount % 5 == 0) {
-                    _messages.add(new Message(
-                        "إيه في إي!!",
-                        false,
-                        new DateTime.now()));
+                    _messages.add(
+                        new Message("إيه في إي!!", false, new DateTime.now()));
                     messageCount++;
                   }
                   msgText.clear();
@@ -415,40 +441,61 @@ class ChatScreen extends State<Chat> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: true,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-            ),
-            onPressed: () => {
-              Navigator.pop(context, false),
-            },
-          ),
-          title: Text(
-            friendUsername,
-            style: TextStyle(color: Colors.white),
-          ),
-          centerTitle: true,
-          // titleSpacing: MediaQuery.of(context).size.width*0.35,
-        ),
-        body: Column(
-          children: <Widget>[
-            Expanded(
-                child: Container(
-              child: ListView.builder(
-                padding: EdgeInsets.only(top: 15.0),
-                reverse: true,
-                itemCount: this.messageCount,
-                itemBuilder: (context, index) => _messageBuilder(
-                    _messages[_messages.length - index - 1],
-                    _messages[_messages.length - index - 1].sender),
+          appBar: AppBar(
+            automaticallyImplyLeading: true,
+            leading: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
               ),
-            )),
-            _messageComposser()
-          ],
-        ),
-      ),
+              onPressed: () => {
+                Navigator.pop(context, false),
+              },
+            ),
+            title: Text(
+              friendUsername,
+              style: TextStyle(color: Colors.white),
+            ),
+            centerTitle: true,
+            // titleSpacing: MediaQuery.of(context).size.width*0.35,
+          ),
+          body: FutureBuilder(
+              future: _helper.loadChat(),
+              builder: (context, AsyncSnapshot snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator();
+                } else {
+                  // _helper.clear(1);
+                  if (_messages.length == 0) {
+                    MessageModel msgModel;
+                    for (int i = 0; i < snapshot.data.length; i++) {
+                      msgModel = MessageModel.fromMap(snapshot.data[i]);
+                      bool isMe = (msgModel.sender == 0) ? true : false;
+                      Message msg =
+                          new Message(msgModel.text, isMe, new DateTime.now());
+                      //msgModel.date)
+                      _messages.add(msg);
+                      messageCount++;
+                      print(_messages[i].text);
+                    }
+                  }
+                  return Column(
+                    children: <Widget>[
+                      Expanded(
+                          child: Container(
+                        child: ListView.builder(
+                          padding: EdgeInsets.only(top: 15.0),
+                          reverse: true,
+                          itemCount: this.messageCount,
+                          itemBuilder: (context, index) => _messageBuilder(
+                              _messages[_messages.length - index - 1],
+                              _messages[_messages.length - index - 1].sender),
+                        ),
+                      )),
+                      _messageComposser()
+                    ],
+                  );
+                }
+              })),
     );
   }
 }
