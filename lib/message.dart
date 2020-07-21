@@ -3,6 +3,7 @@
 class Message{
   final String text;
   final DateTime date;
-  final bool sender;  
-  Message(this.text, this.sender, this.date);
+  final int sender;  
+  final int receiver;
+  Message(this.text, this.sender, this.receiver,this.date );
 }

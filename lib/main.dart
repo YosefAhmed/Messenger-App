@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/rendering.dart';
 import 'package:messanger/Database/DbHelper.dart';
 import 'package:messanger/model/MessageModel.dart';
+import 'package:messanger/model/UserModel.dart';
+import 'package:messanger/user.dart';
 import 'message.dart';
 import 'package:intl/intl.dart';
 
@@ -27,14 +29,16 @@ class AppState extends State<Messanger> {
     'Assets/images/shaba7.jpg',
     'Assets/images/medo.jfif'
   ];
-  final List<String> usernames = [
-    'قاف',
-    'Salma',
-    'Ninja',
-    'عادل شكل',
-    'أنا الشبح',
-    'Medo Gad'
-  ];
+  List<UserModel> friends = new List<UserModel>();
+  // = [
+  //   'قاف',
+  //   'Salma',
+  //   'Ninja',
+  //   'عادل شكل',
+  //   'أنا الشبح',
+  //   'Medo Gad'
+  // ];
+  UserModel _me;
   final List<Color> status = [
     Colors.green,
     Colors.green,
@@ -61,244 +65,290 @@ class AppState extends State<Messanger> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        key: myKey,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(padding: EdgeInsets.only(bottom: 30)),
-            Expanded(
-              child: Container(
-                color: Colors.grey[350],
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          key: myKey,
+          body: FutureBuilder(
+            future: _helper.loadUsers(),
+            builder: (context, AsyncSnapshot snapshot) {
+              // _helper.delete_users();
+              // UserModel model = UserModel({'username': usernames[5]});
+              UserModel userModel;
+              if (_me == null) _me = UserModel.fromMap(snapshot.data[0]);
+              for (int i = 1; i < snapshot.data.length; i++) {
+                userModel = UserModel.fromMap(snapshot.data[i]);
+                friends.add(userModel);
+                // print(userModel.id.toString() + "  " + userModel.username);
+              }
+              if (!snapshot.hasData) {
+                return CircularProgressIndicator();
+              } else {
+                return Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Container(
-                      height: 43.0,
-                      width: 43.0,
-                      child: FittedBox(
-                        child: FloatingActionButton(
-                          onPressed: null,
-                          child: Icon(
-                            Icons.search,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          backgroundColor: Colors.blueAccent,
-                          highlightElevation: 0,
-                        ),
-                      ),
-                    ),
+                    Padding(padding: EdgeInsets.only(bottom: 30)),
                     Expanded(
-                        child: Column(
-                      children: <Widget>[
-                        Stack(
+                      child: Container(
+                        color: Colors.grey[350],
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: <Widget>[
                             Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  // color: Colors.red,
-                                  image: new DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image:
-                                        new AssetImage('Assets/images/JO.jpg'),
-                                  )),
-                            ),
-                            Positioned(
-                              child: Container(
-                                width: 25,
-                                height: 25,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.green,
-                                  border: Border.all(
-                                      color: Colors.grey[350], width: 3),
+                              height: 43.0,
+                              width: 43.0,
+                              child: FittedBox(
+                                child: FloatingActionButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _me = friends[1];
+                                    });
+                                    print(_me.username);
+                                  },
+                                  child: Icon(
+                                    Icons.search,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                  backgroundColor: Colors.blueAccent,
+                                  highlightElevation: 0,
                                 ),
                               ),
-                              bottom: 4,
-                              right: 8,
                             ),
+                            Expanded(
+                                child: Column(
+                              children: <Widget>[
+                                Stack(
+                                  children: <Widget>[
+                                    Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          // color: Colors.red,
+                                          image: new DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: new AssetImage(
+                                                'Assets/images/JO.jpg'),
+                                          )),
+                                    ),
+                                    Positioned(
+                                      child: Container(
+                                        width: 25,
+                                        height: 25,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.green,
+                                          border: Border.all(
+                                              color: Colors.grey[350],
+                                              width: 3),
+                                        ),
+                                      ),
+                                      bottom: 4,
+                                      right: 8,
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  _me.username,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            )),
+                            Container(
+                              height: 43.0,
+                              width: 43.0,
+                              child: FittedBox(
+                                child: FloatingActionButton(
+                                  child: Icon(
+                                    Icons.phone,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
+                                  backgroundColor: Colors.blueAccent,
+                                  highlightElevation: 0,
+                                  heroTag: "tag1",
+                                  onPressed: () {
+                                    // print("HELLOZ");
+                                    // _helper.addUser(model);
+                                    setState(() {
+                                      _me = friends[0];
+                                      print(_me.username);
+                                    });
+                                  },
+                                ),
+                              ),
+                            )
                           ],
                         ),
-                        Text(
-                          "Yousef Ahmed",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    )),
-                    Container(
-                      height: 43.0,
-                      width: 43.0,
-                      child: FittedBox(
-                        child: FloatingActionButton(
-                          child: Icon(
-                            Icons.phone,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          backgroundColor: Colors.blueAccent,
-                          highlightElevation: 0,
-                          heroTag: "tag1",
-                          onPressed: () {},
-                        ),
                       ),
-                    )
-                  ],
-                ),
-              ),
-              flex: 1,
-            ),
-            Expanded(
-              child: Column(
-                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    "Friends",
-                    textAlign: TextAlign.start,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                  Expanded(
-                      child: Container(
-                    child: ListView.builder(
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                            onTap: () {
-                              print(_color);
-                              setState(() {
-                                // _color = !_color;
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Chat(
-                                              username: usernames[index],
-                                            )));
-                                // _color = !_color;
-                              });
-                              print(usernames[index]);
-                            },
-                            child: Container(
-                              height: 90,
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.grey[200],
-                                  ),
-                                ),
-                                color:
-                                    _color ? Colors.white : Colors.blueAccent,
-                              ),
-                              child: Row(
-                                children: <Widget>[
-                                  SizedBox(
-                                    width: 80,
-                                    height: 80,
-                                    child: FloatingActionButton(
-                                      onPressed: () {
-                                        // if (index == 3) {
-                                        //   Navigator.push(
-                                        //       context,
-                                        //       MaterialPageRoute(
-                                        //           builder: (context) => Chat()));
-                                        //   print("إيه في إيه!");
-                                        // }
-                                        // print("Pressed$index");
-                                      },
-                                      heroTag: tags2[index],
-                                      backgroundColor: Colors.white,
-                                      // focusColor: Colors.green,
-                                      child: Stack(
+                      flex: 1,
+                    ),
+                    Expanded(
+                      child: Column(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            "Friends",
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          Expanded(
+                              child: Container(
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                    onTap: () {
+                                      // print(_color);
+                                      setState(() {
+                                        // _color = !_color;
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => Chat(
+                                                      me: _me,
+                                                      receiver: friends[index],
+                                                    )));
+                                        // _color = !_color;
+                                      });
+                                      print(_me.username +
+                                          "   " +
+                                          friends[index].username);
+                                    },
+                                    child: Container(
+                                      height: 90,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey[200],
+                                          ),
+                                        ),
+                                        color: _color
+                                            ? Colors.white
+                                            : Colors.blueAccent,
+                                      ),
+                                      child: Row(
                                         children: <Widget>[
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              // color: Colors.white,
-                                              image: new DecorationImage(
-                                                image: new AssetImage(
-                                                    photos[index]),
-                                                fit: BoxFit.cover,
+                                          SizedBox(
+                                            width: 80,
+                                            height: 80,
+                                            child: FloatingActionButton(
+                                              onPressed: () {
+                                                // if (index == 3) {
+                                                //   Navigator.push(
+                                                //       context,
+                                                //       MaterialPageRoute(
+                                                //           builder: (context) => Chat()));
+                                                //   print("إيه في إيه!");
+                                                // }
+                                                // print("Pressed$index");
+                                              },
+                                              heroTag: tags2[index],
+                                              backgroundColor: Colors.white,
+                                              // focusColor: Colors.green,
+                                              child: Stack(
+                                                children: <Widget>[
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      // color: Colors.white,
+                                                      image:
+                                                          new DecorationImage(
+                                                        image: new AssetImage(
+                                                            photos[index]),
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    child: Container(
+                                                      width: 20,
+                                                      height: 20,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: status[
+                                                            status.length -
+                                                                1 -
+                                                                index],
+                                                        border: Border.all(
+                                                            color: Colors.white,
+                                                            width: 3),
+                                                      ),
+                                                    ),
+                                                    bottom: 0,
+                                                    right: 0,
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
-                                          Positioned(
-                                            child: Container(
-                                              width: 20,
-                                              height: 20,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: status[
-                                                    status.length - 1 - index],
-                                                border: Border.all(
-                                                    color: Colors.white,
-                                                    width: 3),
-                                              ),
+                                          Padding(
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Text(
+                                              friends[index].username,
+                                              textAlign: TextAlign.left,
+                                              style: TextStyle(fontSize: 15),
                                             ),
-                                            bottom: 0,
-                                            right: 0,
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 10),
-                                    child: Text(
-                                      usernames[index],
-                                      textAlign: TextAlign.left,
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ));
-                      },
-                      itemCount: photos.length,
+                                    ));
+                              },
+                              itemCount: photos.length,
+                            ),
+                          )),
+                        ],
+                      ),
+                      flex: 2,
                     ),
-                  )),
-                ],
-              ),
-              flex: 2,
-            ),
-          ],
-        ),
-      ),
+                  ],
+                );
+              }
+            },
+          )),
     );
   }
 }
 
 class Chat extends StatefulWidget {
-  final String username;
-  const Chat({Key key, this.username}) : super(key: key);
+  final UserModel me;
+  final UserModel receiver;
+  const Chat({
+    Key key,
+    this.me,
+    this.receiver,
+    username,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return ChatScreen(this.username);
+    return ChatScreen(this.receiver, this.me);
   }
 }
 
 class ChatScreen extends State<Chat> {
-  var _time = DateTime.parse("2018-08-16T11:00:00.000Z");
-  final String friendUsername;
+  final UserModel receiver;
+  final UserModel me;
+
   final msgText = TextEditingController();
   int messageCount = 0;
-  Message _msg;
   List<Message> _messages = new List<Message>();
-  ChatScreen(this.friendUsername);
+  ChatScreen(this.receiver, this.me);
 
   DbHelper _helper;
-
   @override
   void initState() {
     super.initState();
     _helper = DbHelper();
   }
 
-  _messageBuilder(Message message, bool isMe) {
+  _messageBuilder(Message message, int sender) {
+    bool isMe;
+    sender == me.id ? isMe = true : isMe = false;
     Container msg = new Container(
         decoration: BoxDecoration(
             border: Border.all(
@@ -351,7 +401,7 @@ class ChatScreen extends State<Chat> {
                         // alignment:
                         // isMe ? Alignment.bottomRight : Alignment.bottomLeft,
                         child: Text(
-                          friendUsername,
+                          receiver.username,
                           style:
                               TextStyle(color: Colors.grey[600], fontSize: 10),
                         ),
@@ -404,32 +454,51 @@ class ChatScreen extends State<Chat> {
               MessageModel msgModel = MessageModel({
                 'text': msgText.text,
                 'date': DateTime.now().toString(),
-                'sender': 0
+                'sender': me.id,
+                'receiver': receiver.id
               });
 
-              int id = await _helper.createChat(msgModel);
-              print("Done $id");
+              _helper.addMessage(msgModel);
+              // _helper.clear(sender)
+              // print("Done $id");
               setState(() {
                 if (msgText.text.isNotEmpty) {
-                  _messages
-                      .add(new Message(msgText.text, true, new DateTime.now()));
+                  _messages.add(new Message(
+                      msgText.text, me.id, receiver.id, new DateTime.now()));
                   messageCount++;
-                  if (messageCount % 3 == 0) {
-                    _messages.add(new Message(
-                        "السلام عليكم و رحمة الله و بركااتووووو",
-                        false,
-                        new DateTime.now()));
-                    messageCount++;
-                  }
-                  if (messageCount % 5 == 0) {
-                    _messages.add(
-                        new Message("إيه في إي!!", false, new DateTime.now()));
-                    messageCount++;
-                  }
+                  // if (messageCount % 3 == 0) {
+                  //   _messages.add(new Message(
+                  //       "السلام عليكم و رحمة الله و بركااتووووو",
+                  //       receiver.id,
+                  //       me.id,
+                  //       new DateTime.now()));
+                  //   msgModel = MessageModel({
+                  //     'text': "السلام عليكم و رحمة الله و بركااتووووو",
+                  //     'date': DateTime.now().toString(),
+                  //     'sender': receiver.id,
+                  //     'receiver': me.id
+                  //   });
+
+                  //   _helper.addMessage(msgModel);
+                  //   messageCount++;
+                  // }
+                  // if (messageCount % 5 == 0) {
+                  //   _messages.add(new Message(
+                  //       "Eh Fi Eh?!", receiver.id, me.id, new DateTime.now()));
+                  //   msgModel = MessageModel({
+                  //     'text': "Eh Fi Eh?!",
+                  //     'date': DateTime.now().toString(),
+                  //     'sender': receiver.id,
+                  //     'receiver': me.id
+                  //   });
+                  //   _helper.addMessage(msgModel);
+
+                  //   messageCount++;
+                  // }
                   msgText.clear();
                 }
               });
-              print(_messages.length);
+              // print(_messages.length);
             },
           ),
         ],
@@ -452,30 +521,32 @@ class ChatScreen extends State<Chat> {
               },
             ),
             title: Text(
-              friendUsername,
+              receiver.username,
               style: TextStyle(color: Colors.white),
             ),
             centerTitle: true,
             // titleSpacing: MediaQuery.of(context).size.width*0.35,
           ),
           body: FutureBuilder(
-              future: _helper.loadChat(),
+              future: _helper.loadChat(me.id, receiver.id),
               builder: (context, AsyncSnapshot snapshot) {
+                // List<dynamic> users = _helper.loadUsers();
+                // print(users);
                 if (!snapshot.hasData) {
                   return CircularProgressIndicator();
                 } else {
-                  // _helper.clear(1);
+                  // _helper.clear(0);
                   if (_messages.length == 0) {
                     MessageModel msgModel;
                     for (int i = 0; i < snapshot.data.length; i++) {
                       msgModel = MessageModel.fromMap(snapshot.data[i]);
-                      bool isMe = (msgModel.sender == 0) ? true : false;
-                      Message msg =
-                          new Message(msgModel.text, isMe, new DateTime.now());
+                      // bool isMe = (msgModel.sender == 0) ? true : false;
+                      Message msg = new Message(msgModel.text, msgModel.sender,
+                          msgModel.receiver, DateTime.parse(msgModel.date));
                       //msgModel.date)
                       _messages.add(msg);
                       messageCount++;
-                      print(_messages[i].text);
+                      // print(_messages[i].text);
                     }
                   }
                   return Column(
